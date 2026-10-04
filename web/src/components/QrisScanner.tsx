@@ -39,7 +39,14 @@ export default function QrisScanner({ merchant, city = 'Jakarta', onScanned }: P
   const [vp, setVp] = useState({ w: 360, h: 440 })
   const [view, setView] = useState<View>({ ox: 120 * START_Z, oy: (H * START_Z - 440) / 2, z: START_Z })
   const [qrSvg, setQrSvg] = useState('')
-  const [gyroOn, setGyroOn] = useState(false)
+  const canGyro = typeof window !== 'undefined' && 'DeviceOrientationEvent' in window && 'ontouchstart' in window
+  // sebagian browser (Safari iOS, Chrome baru) mewajibkan izin sensor gerak lewat sentuhan user
+  const needsGyroPermission =
+    canGyro && typeof (window.DeviceOrientationEvent as unknown as { requestPermission?: unknown }).requestPermission === 'function'
+  // gerak HP aktif secara default; gyroLive = data sensor benar-benar sudah masuk
+  const [gyroOn, setGyroOn] = useState(canGyro)
+  const [gyroLive, setGyroLive] = useState(false)
+  const [gyroAsked, setGyroAsked] = useState(false)
   const [scanned, setScanned] = useState(false)
   const sceneBg = useImageOk(img.scene360) ? img.scene360 : undefined
   const payload = useMemo(() => buildQrisPayload(merchant, city), [merchant, city])
@@ -129,6 +136,11 @@ export default function QrisScanner({ merchant, city = 'Jakarta', onScanned }: P
   const onPointerUp = (e: React.PointerEvent) => {
     pointers.current.delete(e.pointerId)
     if (pointers.current.size < 2) pinch.current = null
+    // iOS: sentuhan pertama dipakai untuk meminta izin sensor gerak, lalu langsung aktif
+    if (gyroOn && !gyroLive && needsGyroPermission && !gyroAsked) {
+      setGyroAsked(true)
+      requestGyro()
+    }
   }
 
   /* --- gerak HP (giroskop) --- */
@@ -136,6 +148,7 @@ export default function QrisScanner({ merchant, city = 'Jakarta', onScanned }: P
     if (!gyroOn) return
     const onOrient = (e: DeviceOrientationEvent) => {
       if (e.alpha == null || e.beta == null) return
+      setGyroLive(true)
       setView((v) => {
         if (!gyro.current) {
           gyro.current = { a: e.alpha!, b: e.beta!, ox: v.ox, oy: v.oy }
@@ -152,19 +165,24 @@ export default function QrisScanner({ merchant, city = 'Jakarta', onScanned }: P
     return () => {
       window.removeEventListener('deviceorientation', onOrient)
       gyro.current = null
+      setGyroLive(false)
     }
   }, [gyroOn, normalize])
 
-  const enableGyro = async () => {
+  const requestGyro = async () => {
     const DOE = window.DeviceOrientationEvent as unknown as { requestPermission?: () => Promise<string> }
     try {
       if (DOE?.requestPermission && (await DOE.requestPermission()) !== 'granted') return
-      setGyroOn((on) => !on)
+      setGyroOn(true)
     } catch {
       // izin ditolak / tidak didukung
     }
   }
-  const canGyro = typeof window !== 'undefined' && 'DeviceOrientationEvent' in window && 'ontouchstart' in window
+  const toggleGyro = () => {
+    setGyroAsked(true)
+    if (gyroOn) setGyroOn(false)
+    else requestGyro()
+  }
 
   /* --- deteksi QR di dalam kotak --- */
   const F = Math.min(220, vp.w * 0.62)
@@ -304,8 +322,12 @@ export default function QrisScanner({ merchant, city = 'Jakarta', onScanned }: P
         <Move size={12} /> Geser untuk melihat 360° · scroll / pinch / slider untuk zoom
       </p>
       {canGyro && (
-        <button onClick={enableGyro} className={`mt-2 mx-auto block rounded-full px-4 py-1.5 text-xs font-semibold ${gyroOn ? 'bg-mint text-navy' : 'bg-white/15 border border-current/20'}`}>
-          {gyroOn ? 'Gerak HP aktif' : 'Gunakan gerak HP (360°)'}
+        <button onClick={toggleGyro} className={`mt-2 mx-auto block rounded-full px-4 py-1.5 text-xs font-semibold ${gyroOn ? 'bg-mint text-navy' : 'bg-white/15 border border-current/20'}`}>
+          {!gyroOn
+            ? 'Gunakan gerak HP (360°)'
+            : gyroLive || !needsGyroPermission
+              ? 'Gerak HP aktif · ketuk untuk matikan'
+              : 'Sentuh layar untuk aktifkan gerak HP'}
         </button>
       )}
     </div>
