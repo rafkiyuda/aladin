@@ -29,7 +29,7 @@ export default function JourneyComplete() {
         <div className="mt-6 rounded-2xl bg-[#fff6e0] p-4 flex items-center gap-3">
           <RewardIcon size={76} />
           <div>
-            <p className="text-sm font-semibold">Total Reward</p>
+            <p className="text-sm font-semibold">Total Rezeki Anak Sholeh</p>
             <p className="text-3xl font-bold text-navy">{formatRp(state.rewardEarned)}</p>
             <p className="text-xs text-muted">sudah masuk ke saldo kamu!</p>
           </div>

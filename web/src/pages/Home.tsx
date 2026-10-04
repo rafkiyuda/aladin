@@ -462,7 +462,7 @@ export default function Home() {
                 }
               />
               <div>
-                <p className="text-sm font-semibold">{onboardingDone ? 'Hadiah journey kamu' : 'Dapat hadiah awal'}</p>
+                <p className="text-sm font-semibold">{onboardingDone ? 'Hadiah journey kamu' : 'Dapatkan Rezeki Anak Sholeh'}</p>
                 <p className="text-2xl font-bold text-[#e5484d]">{formatRp(onboardingDone ? state.rewardEarned : ONBOARDING_TOTAL_REWARD)}</p>
                 <p className="text-xs text-muted">{onboardingDone ? 'sudah masuk ke Ala Dompet ✓' : 'untuk kamu yang ikut Aladin Journey! 🎁'}</p>
               </div>
