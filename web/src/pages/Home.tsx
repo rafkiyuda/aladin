@@ -21,23 +21,27 @@ import {
   Wifi,
   Zap,
 } from 'lucide-react'
-import { BottomNav, Button, Carousel, Modal, ProductCard, SectionTitle, useToast } from '../components/ui'
+import { BottomNav, Button, Carousel, Modal, ProductCard, RewardIcon, SectionTitle, useToast } from '../components/ui'
 import Mascot from '../components/Mascot'
 import SmartImg from '../components/SmartImg'
 import { img } from '../images'
 import { useApp } from '../state/AppState'
-import { berbagi, campaigns, categoryColors, formatRp, missions, promos, type Category } from '../data'
+import { berbagi, campaigns, categoryColors, formatRp, missions, ONBOARDING_TOTAL_REWARD, promos, type Category } from '../data'
+
+// Pop-up undangan cukup sekali per buka aplikasi (reset saat halaman di-refresh / dibuka ulang)
+let invitationShownThisVisit = false
 
 export default function Home() {
   const navigate = useNavigate()
-  const { state, update, onboardingDone } = useApp()
+  const { state, update, onboardingDone, reset } = useApp()
   const { toast, toastNode } = useToast()
   const [scrolled, setScrolled] = useState(false)
   const [showInvite, setShowInvite] = useState(false)
 
   const done = state.completedMissions.length
   const inJourney = state.onboardingStarted && !onboardingDone
-  const showProactive = onboardingDone && !state.proactiveInsightSeen
+  // insight proaktif tampil setelah pop-up undangan ditutup, supaya tidak bertumpuk
+  const showProactive = onboardingDone && !state.proactiveInsightSeen && invitationShownThisVisit && !showInvite
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 140)
@@ -45,12 +49,21 @@ export default function Home() {
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  // Pop-up undangan AI muncul beberapa detik setelah beranda dibuka (pengguna baru)
+  // Pop-up undangan AI muncul setiap kali aplikasi dibuka
   useEffect(() => {
-    if (state.invitationDismissed || state.onboardingStarted) return
-    const t = setTimeout(() => setShowInvite(true), 1200)
+    if (invitationShownThisVisit) return
+    const t = setTimeout(() => {
+      invitationShownThisVisit = true
+      setShowInvite(true)
+    }, 1200)
     return () => clearTimeout(t)
-  }, [state.invitationDismissed, state.onboardingStarted])
+  }, [])
+
+  const hasJourney = state.goals.length > 0
+  const closeInvite = () => {
+    setShowInvite(false)
+    update({ invitationDismissed: true })
+  }
 
   const soon = () => toast('Fitur ini segera hadir di prototipe 🙏')
 
@@ -76,11 +89,20 @@ export default function Home() {
   ]
 
   return (
-    <div className="bg-white">
+    <div className="relative bg-white">
+      {/* Latar atas: navy ke hijau toska + bintik bintang, membentang di belakang header & kartu dompet */}
+      <div className={`absolute inset-x-0 top-0 overflow-hidden ${inJourney || onboardingDone ? 'h-[316px]' : 'h-60'}`} aria-hidden>
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,#0b1a5e_0%,#0b1a5e_38%,#0c3a63_62%,#0f6f72_84%,#16a58a_100%)]" />
+        <div className="absolute -left-16 bottom-0 w-64 h-40 rounded-full bg-[#1fd1a0] opacity-30 blur-3xl" />
+        <div className="absolute -right-16 bottom-0 w-64 h-40 rounded-full bg-[#1fd1a0] opacity-30 blur-3xl" />
+        <Stars />
+        <div className="absolute -bottom-16 -left-10 -right-10 h-28 bg-white rounded-[50%]" />
+      </div>
+
       {/* Header */}
       <header
         className={`sticky top-0 z-30 flex items-center justify-between px-5 h-16 transition-colors ${
-          scrolled ? 'bg-white text-brand shadow-sm' : 'bg-navy text-white'
+          scrolled ? 'bg-white text-brand shadow-sm' : 'bg-transparent text-white'
         }`}
       >
         <Logo />
@@ -95,12 +117,8 @@ export default function Home() {
         </div>
       </header>
 
-      {/* Latar navy + kartu dompet */}
+      {/* Kartu dompet */}
       <section className="relative">
-        <div className="absolute inset-x-0 top-0 h-44 bg-navy overflow-hidden">
-          <Stars />
-          <div className="absolute -bottom-16 -left-10 -right-10 h-28 bg-white rounded-[50%]" />
-        </div>
 
         <div className="relative px-5 pt-2">
           {(inJourney || onboardingDone) && (
@@ -190,9 +208,7 @@ export default function Home() {
       {onboardingDone && state.rewardEarned > 0 && (
         <section className="px-5 mt-4">
           <div className="rounded-2xl bg-[#fff6e0] border border-gold/30 p-4 flex items-center gap-3">
-            <span className="w-12 h-12 rounded-xl bg-gold/20 text-gold flex items-center justify-center">
-              <Gift size={26} />
-            </span>
+            <RewardIcon size={60} />
             <div className="flex-1">
               <p className="text-sm font-semibold">Uang hasil journey kamu</p>
               <p className="text-xl font-bold text-[#e5484d]">{formatRp(state.rewardEarned)} 🎁</p>
@@ -388,7 +404,7 @@ export default function Home() {
       </section>
 
       {/* Tombol mengambang untuk melanjutkan journey */}
-      {!onboardingDone && state.invitationDismissed && (
+      {!onboardingDone && !showInvite && (state.invitationDismissed || hasJourney) && (
         <button
           onClick={() => navigate(state.goals.length ? '/journey' : '/onboarding/tujuan')}
           className="fixed bottom-24 z-30 right-[max(16px,calc(50vw-215px+16px))] flex items-center gap-1 rounded-full bg-white shadow-lg border border-line pl-1 pr-3 py-1 animate-float"
@@ -410,26 +426,45 @@ export default function Home() {
       {/* Pop-up undangan AI */}
       <Modal
         open={showInvite}
-        onClose={() => {
-          setShowInvite(false)
-          update({ invitationDismissed: true })
-        }}
+        onClose={closeInvite}
       >
         <div className="rounded-3xl bg-white overflow-hidden">
-          <div className="bg-gradient-to-b from-navy to-[#14306e] pt-6 flex justify-center">
-            <Mascot pose="gift" size={170} />
+          <div className="relative bg-gradient-to-b from-[#0b3d45] to-[#1a6458] pt-10 flex justify-center overflow-hidden">
+            {/* Background elements to match the image */}
+            <div className="absolute top-4 right-6 w-8 h-8 rounded-full bg-transparent shadow-[-8px_8px_0_0_white] rotate-45" />
+            <div className="absolute top-6 left-8 text-yellow-300 text-xl">✦</div>
+            <div className="absolute top-12 right-20 text-yellow-300 text-sm">✦</div>
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#0c2a29]" style={{ clipPath: 'polygon(0 40%, 20% 0, 50% 30%, 80% 10%, 100% 50%, 100% 100%, 0 100%)' }} />
+            <div className="absolute bottom-0 left-0 right-0 h-10 bg-[#16413a]" style={{ clipPath: 'polygon(0 20%, 30% 60%, 70% 20%, 100% 40%, 100% 100%, 0 100%)' }} />
+            
+            <div className="relative z-10 translate-y-[5%]">
+              <Mascot pose="gift" size={180} />
+            </div>
           </div>
           <div className="p-5">
             <h2 className="text-2xl font-bold">Halo! 👋</h2>
-            <p className="text-muted mt-1">Mau mulai perjalanan keuangan yang lebih terarah & sesuai prinsip syariah?</p>
+            <p className="text-muted mt-1">
+              {onboardingDone
+                ? 'Kamu sudah menyelesaikan Aladin Journey 🎉 Lanjutkan kebiasaan baikmu lewat Aladin Challenge, yuk!'
+                : hasJourney
+                  ? `Yuk lanjutkan Aladin Journey-mu! Sudah ${done} dari ${missions.length} misi selesai.`
+                  : 'Mau mulai perjalanan keuangan yang lebih terarah & sesuai prinsip syariah?'}
+            </p>
             <div className="mt-4 rounded-2xl bg-[#fff6e0] p-4 flex items-center gap-3">
-              <span className="w-12 h-12 rounded-xl bg-[#e5484d] text-white flex items-center justify-center">
-                <Gift size={24} />
-              </span>
+              <SmartImg
+                src={img.hadiahPopup}
+                alt=""
+                className="w-16 h-16 shrink-0 object-contain drop-shadow-md"
+                fallback={
+                  <span className="w-12 h-12 rounded-xl bg-[#e5484d] text-white flex items-center justify-center">
+                    <Gift size={24} />
+                  </span>
+                }
+              />
               <div>
-                <p className="text-sm font-semibold">Dapat hadiah awal</p>
-                <p className="text-2xl font-bold text-[#e5484d]">Rp25.000</p>
-                <p className="text-xs text-muted">untuk kamu yang ikut Aladin Journey! 🎁</p>
+                <p className="text-sm font-semibold">{onboardingDone ? 'Hadiah journey kamu' : 'Dapat hadiah awal'}</p>
+                <p className="text-2xl font-bold text-[#e5484d]">{formatRp(onboardingDone ? state.rewardEarned : ONBOARDING_TOTAL_REWARD)}</p>
+                <p className="text-xs text-muted">{onboardingDone ? 'sudah masuk ke Ala Dompet ✓' : 'untuk kamu yang ikut Aladin Journey! 🎁'}</p>
               </div>
             </div>
             <ul className="mt-4 space-y-2 text-sm">
@@ -444,18 +479,21 @@ export default function Home() {
               className="w-full mt-5"
               onClick={() => {
                 setShowInvite(false)
+                if (onboardingDone) return navigate('/challenge')
                 update({ invitationDismissed: true, onboardingStarted: true })
-                navigate('/onboarding/tujuan')
+                navigate(hasJourney ? '/journey' : '/onboarding/tujuan')
               }}
             >
-              Yuk Mulai Sekarang!
+              {onboardingDone ? 'Lihat Aladin Challenge' : hasJourney ? 'Lanjutkan Journey' : 'Yuk Mulai Sekarang!'}
             </Button>
+            {onboardingDone && (
+              <Button variant="outline" className="w-full mt-2" onClick={reset}>
+                Ulangi Journey dari Awal
+              </Button>
+            )}
             <button
               className="w-full mt-2 py-2 text-brand font-semibold underline underline-offset-4"
-              onClick={() => {
-                setShowInvite(false)
-                update({ invitationDismissed: true })
-              }}
+              onClick={closeInvite}
             >
               Nanti Saja
             </button>
@@ -500,14 +538,28 @@ export function Logo({ className = '' }: { className?: string }) {
   return <span className={`text-[28px] font-extrabold tracking-tight italic ${className}`}>Aladin</span>
 }
 
+// posisi bintik bintang tetap (pseudo-acak) supaya tidak berubah tiap render
+const stars = Array.from({ length: 46 }, (_, i) => {
+  const r = (n: number) => ((Math.sin(i * 12.9898 + n * 78.233) * 43758.5453) % 1 + 1) % 1
+  return { x: r(1) * 100, y: r(2) * 92, size: 1 + r(3) * 2.2, opacity: 0.35 + r(4) * 0.6, delay: r(5) * 4, twinkle: i % 3 === 0 }
+})
+
 function Stars() {
   return (
-    <div className="absolute inset-0" aria-hidden>
-      {Array.from({ length: 18 }).map((_, i) => (
+    <div className="absolute inset-0">
+      {stars.map((st, i) => (
         <span
           key={i}
           className="absolute rounded-full bg-white"
-          style={{ width: (i % 3) + 1, height: (i % 3) + 1, left: `${(i * 53) % 100}%`, top: `${(i * 29) % 90}%`, opacity: 0.35 + (i % 4) * 0.15 }}
+          style={{
+            left: `${st.x}%`,
+            top: `${st.y}%`,
+            width: st.size,
+            height: st.size,
+            opacity: st.opacity,
+            boxShadow: st.size > 2.4 ? '0 0 6px rgba(255,255,255,.8)' : undefined,
+            animation: st.twinkle ? `twinkle 3s ${st.delay}s ease-in-out infinite` : undefined,
+          }}
         />
       ))}
     </div>

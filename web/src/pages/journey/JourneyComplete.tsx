@@ -1,6 +1,6 @@
 import { Navigate, useNavigate } from 'react-router-dom'
-import { CircleCheck, Gift } from 'lucide-react'
-import { Button, Confetti } from '../../components/ui'
+import { CircleCheck } from 'lucide-react'
+import { Button, Confetti, RewardIcon } from '../../components/ui'
 import Mascot from '../../components/Mascot'
 import { formatRp } from '../../data'
 import { useApp } from '../../state/AppState'
@@ -27,9 +27,7 @@ export default function JourneyComplete() {
           ))}
         </ul>
         <div className="mt-6 rounded-2xl bg-[#fff6e0] p-4 flex items-center gap-3">
-          <span className="w-14 h-14 rounded-xl bg-[#e5484d] text-white flex items-center justify-center">
-            <Gift size={28} />
-          </span>
+          <RewardIcon size={76} />
           <div>
             <p className="text-sm font-semibold">Total Reward</p>
             <p className="text-3xl font-bold text-navy">{formatRp(state.rewardEarned)}</p>

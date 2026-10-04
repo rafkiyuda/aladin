@@ -46,6 +46,10 @@ html, body {
   from { stroke-dashoffset: 100; }
   to { stroke-dashoffset: 0; }
 }
+@keyframes twinkle {
+  0%, 100% { opacity: .25; }
+  50% { opacity: 1; }
+}
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-6px); }
@@ -61,4 +65,5 @@ html, body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-pop-in, .animate-slide-up, .animate-fade-in, .animate-float { animation: none; }
+  [style*='twinkle'] { animation: none !important; }
 }
