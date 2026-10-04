@@ -1,6 +1,5 @@
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
-import { Gift } from 'lucide-react'
-import { Button, Confetti } from '../../components/ui'
+import { Button, Confetti, RewardIcon } from '../../components/ui'
 import { formatRp, missions } from '../../data'
 import { useApp } from '../../state/AppState'
 import { missionIcons } from './missionIcons'
@@ -56,9 +55,7 @@ export default function MissionDone() {
       <p className="text-muted mt-1">Kamu berhasil menyelesaikan “{m.title}”.</p>
 
       <div className="mt-6 w-full rounded-2xl bg-[#fff6e0] p-4 flex items-center gap-3 text-left">
-        <span className="w-12 h-12 rounded-xl bg-gold/25 text-gold flex items-center justify-center">
-          <Gift size={26} />
-        </span>
+        <RewardIcon size={64} />
         <div>
           <p className="text-2xl font-bold text-navy">+{formatRp(m.reward)}</p>
           <p className="text-sm text-muted">Telah masuk ke saldo kamu 🎉</p>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { ChevronLeft, House, ScanLine, Wallet, X } from 'lucide-react'
+import { ChevronLeft, Gift, House, ScanLine, Wallet, X } from 'lucide-react'
 import { formatRp, savingsProducts } from '../data'
 import { img } from '../images'
 import SmartImg from './SmartImg'
@@ -227,6 +227,23 @@ export function ImpianIcon({ size = 64 }: { size?: number }) {
       <rect x="14" y="6" width="36" height="10" rx="5" fill="#f5a524" />
       <path d="M32 22l5 10 11 1.5-8 7.5 2 11-10-5.5-10 5.5 2-11-8-7.5L27 32z" fill="#f5a524" />
     </svg>
+  )
+}
+
+/** Ikon kado 3D untuk kartu reward/hadiah (cadangan: ikon datar). */
+export function RewardIcon({ size = 64 }: { size?: number }) {
+  return (
+    <SmartImg
+      src={img.hadiahPopup}
+      alt=""
+      className="shrink-0 object-contain drop-shadow-md"
+      style={{ width: size, height: size }}
+      fallback={
+        <span className="shrink-0 rounded-xl bg-[#e5484d] text-white flex items-center justify-center" style={{ width: size * 0.8, height: size * 0.8 }}>
+          <Gift size={size * 0.4} />
+        </span>
+      }
+    />
   )
 }
 

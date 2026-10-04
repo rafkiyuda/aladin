@@ -40,6 +40,8 @@ MAPPING = {
     # ikon produk
     '7cd7cc9e-4bdf-4388-8be5-b823f13f879e.jpeg': ('icons/produk-ala-deposito.png', 'icon', 512),
     'e01cfc25-16f7-4a42-85a5-435186525a91.jpeg': ('icons/produk-ala-impian.png', 'icon', 512),
+    # ikon hadiah di pop-up undangan (latar krem)
+    'hadiah-popup.png': ('icons/hadiah-popup.png', 'icon-solid-bg', 256),
 }
 
 ICON_SHEET = 'b3d27ff4-edf6-4ca4-868b-c1f4d5295fd8.jpeg'
@@ -83,12 +85,19 @@ def grow(m, r):
     return out
 
 
-def remove_bg(im, min_bright=205, max_sat=14, barrier=2):
-    """Hapus latar terang & netral (putih / kotak-kotak abu) yang terhubung ke tepi."""
+def remove_bg(im, min_bright=205, max_sat=14, barrier=2, solid_tol=None):
+    """Hapus latar terang & netral (putih / kotak-kotak abu) yang terhubung ke tepi.
+
+    solid_tol: kalau diisi, latar dianggap satu warna solid (diambil dari sudut kiri atas)
+    dan piksel yang jaraknya < solid_tol dari warna itu dihapus.
+    """
     a = np.array(im.convert('RGBA'))
     h, w = a.shape[:2]
     rgb = a[:, :, :3].astype(int)
-    bright = (rgb.min(axis=2) >= min_bright) & ((rgb.max(axis=2) - rgb.min(axis=2)) <= max_sat)
+    if solid_tol is not None:
+        bright = np.abs(rgb - rgb[2, 2]).max(axis=2) < solid_tol
+    else:
+        bright = (rgb.min(axis=2) >= min_bright) & ((rgb.max(axis=2) - rgb.min(axis=2)) <= max_sat)
     dark = rgb.max(axis=2) < 120
     passable = bright & ~grow(dark, barrier)
     seen = np.zeros((h, w), bool)
@@ -186,6 +195,30 @@ def process_icon_sheet():
         save(square(trim(remove_bg(icon, min_bright=236, max_sat=10)), 256), f'icons/{name}.png')
 
 
+MISSION_SHEET = 'misi-ikon-set.png'  # 5 tile berwarna dalam satu baris
+
+
+def process_mission_sheet():
+    path = os.path.join(SRC, MISSION_SHEET)
+    if not os.path.exists(path):
+        return
+    im = Image.open(path).convert('RGB')
+    a = np.array(im).astype(int)
+    colored = (a.max(axis=2) - a.min(axis=2)) > 70  # area tile (warna pekat), bayangan abu-abu tidak ikut
+    cols = segments(colored.any(axis=0), 80)
+    print('misi tiles', len(cols))
+    for i, (x0, x1) in enumerate(cols, start=1):
+        ys = np.where(colored[:, x0:x1].any(axis=1))[0]
+        pad = 6
+        tile = im.crop((x0 - pad, ys[0] - pad, x1 + pad, ys[-1] + 1 + pad))
+        # sudut putih di luar tile dihapus; simbol putih di dalam aman karena dikelilingi warna tile
+        tile = trim(remove_bg(tile, min_bright=225, max_sat=20, barrier=0), pad=0)
+        s = max(tile.size)
+        sq = Image.new('RGBA', (s, s), (0, 0, 0, 0))
+        sq.paste(tile, ((s - tile.width) // 2, (s - tile.height) // 2), tile)
+        save(sq.resize((256, 256), Image.LANCZOS), f'icons/misi-{i}.png')
+
+
 def main():
     for src, (dst, kind, size) in MAPPING.items():
         path = os.path.join(SRC, src)
@@ -199,7 +232,10 @@ def main():
             save(fit_width(trim(remove_bg(im)), size), dst)
         elif kind == 'icon':
             save(square(trim(remove_bg(im)), size), dst)
+        elif kind == 'icon-solid-bg':
+            save(square(trim(remove_bg(im, solid_tol=24)), size), dst)
     process_icon_sheet()
+    process_mission_sheet()
 
 
 if __name__ == '__main__':

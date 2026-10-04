@@ -5,6 +5,8 @@ import Mascot from '../../components/Mascot'
 import { formatRp, missions, ONBOARDING_TOTAL_REWARD } from '../../data'
 import { useApp } from '../../state/AppState'
 import { missionIcons } from './missionIcons'
+import SmartImg from '../../components/SmartImg'
+import { img } from '../../images'
 
 export default function JourneyOverview() {
   const navigate = useNavigate()
@@ -55,11 +57,22 @@ export default function JourneyOverview() {
                   isNext ? 'border-brand bg-white shadow-md' : 'border-line bg-white'
                 } ${locked ? 'opacity-60' : ''}`}
               >
-                <span
-                  className="w-12 h-12 shrink-0 rounded-xl flex items-center justify-center text-white"
-                  style={{ background: isDone ? '#13b38a' : m.color }}
-                >
-                  {isDone ? <Check size={24} strokeWidth={3} /> : <Icon size={22} />}
+                <span className="relative shrink-0">
+                  <SmartImg
+                    src={img.missionIcon(m.id)}
+                    alt=""
+                    className="w-12 h-12 rounded-xl object-contain"
+                    fallback={
+                      <span className="w-12 h-12 rounded-xl flex items-center justify-center text-white" style={{ background: m.color }}>
+                        <Icon size={22} />
+                      </span>
+                    }
+                  />
+                  {isDone && (
+                    <span className="absolute -right-1.5 -bottom-1.5 w-6 h-6 rounded-full bg-[#13b38a] text-white border-2 border-white flex items-center justify-center">
+                      <Check size={13} strokeWidth={3.5} />
+                    </span>
+                  )}
                 </span>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-muted">Misi {m.id}</p>

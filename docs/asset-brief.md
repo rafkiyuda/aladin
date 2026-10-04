@@ -117,6 +117,36 @@ Prompt template: `[3D ICON] App shortcut icon: {isi ikon}, centered on a white r
 | `icons/goal-syariah.png` | Masjid kecil dengan kubah emas & bulan sabit |
 | `icons/goal-atur.png` | Struk/nota dengan pensil |
 
+## 7b. Ikon Misi (daftar "Aladin Journey")
+
+**1:1** (512×512), PNG. Ditampilkan kecil (48 px) di daftar misi, jadi bentuknya harus **sederhana & tebal**, terbaca di ukuran kecil. Tiap ikon **sudah termasuk tile**: rounded square berwarna (radius ±22%) dengan ikon 3D putih/terang di tengah. Centang "selesai" ditambahkan otomatis oleh web, jadi **jangan** gambar centang.
+
+Satu seri, gaya & pencahayaan harus sama untuk kelima ikon. Generate berurutan dalam satu sesi, atau minta kelimanya dalam **satu gambar grid 5 kolom** lalu biarkan Claude memotongnya.
+
+| File | Warna tile | Isi ikon |
+|---|---|---|
+| `icons/misi-1.png` | royal blue #2323C9 | Roket putih kecil meluncur keluar dari bingkai scan QR (4 sudut), jejak api oranye |
+| `icons/misi-2.png` | hijau #16A34A | Grafik batang putih naik + nota/struk kecil di belakangnya |
+| `icons/misi-3.png` | emas #F5A524 | Tunas tanaman hijau muda tumbuh dari tumpukan koin putih/emas |
+| `icons/misi-4.png` | merah-pink #E11D48 | Dua tangan putih menangkup hati kecil |
+| `icons/misi-5.png` | ungu #7C3AED | Buku terbuka putih dengan siluet kubah masjid & bulan sabit kecil |
+
+Prompt template:
+```
+[3D ICON] Mobile app mission icon, 512x512. A {warna tile} rounded-square tile (corner radius about 22%, soft inner glow, subtle top highlight) with a chunky glossy 3D {isi ikon} in white and soft accent colors centered on it. Simple bold shapes that stay readable at 48px. Soft drop shadow under the symbol. Plain white background outside the tile. No text, no numbers, no checkmark.
+```
+
+Prompt sekaligus 5 (satu gambar):
+```
+[3D ICON] A set of 5 matching mobile app mission icons arranged in one row on a plain white background, equal size and spacing, same lighting and style. Each is a colored rounded-square tile (corner radius about 22%) with a chunky glossy 3D white symbol in the middle:
+1) royal blue #2323C9 tile: a small rocket launching out of a QR-scan frame (four corner brackets), orange flame;
+2) green #16A34A tile: rising bar chart with a small receipt behind it;
+3) gold #F5A524 tile: a light-green sprout growing from a stack of coins;
+4) pink-red #E11D48 tile: two hands cupping a small heart;
+5) purple #7C3AED tile: an open book with a small mosque dome and crescent silhouette.
+Simple bold shapes readable at 48px. No text, no numbers, no checkmarks.
+```
+
 ## 8. Badge Misi (layar "Misi X Selesai!")
 
 **1:1** (512×512), PNG transparan. Satu seri yang konsisten: **hexagon navy dengan bingkai emas, dua pita merah di bawah**, simbol berbeda di tengah, warna glow sesuai misi.
@@ -180,6 +210,7 @@ Prompt template (lampirkan sprite `Maskot/`): `[ILUSTRASI] The same hijab mascot
 - [x] 2 ikon produk
 - [x] 9 ikon shortcut
 - [x] 6 ikon tujuan
+- [x] 5 ikon misi (daftar journey)
 - [ ] 5 badge misi
 - [ ] 4 ikon reward
 - [ ] 1 panorama warung 360°

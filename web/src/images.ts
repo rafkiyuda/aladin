@@ -51,6 +51,7 @@ export const img = {
     syariah: p('icons/goal-syariah.png'),
     atur: p('icons/goal-atur.png'),
   } as Record<string, string>,
+  missionIcon: (id: number) => p(`icons/misi-${id}.png`),
   badge: (id: number) => p(`badges/badge-misi-${id}.png`),
   reward: {
     r1: p('icons/reward-pulsa.png'),
@@ -58,5 +59,6 @@ export const img = {
     r3: p('icons/reward-voucher.png'),
     r4: p('icons/reward-donasi.png'),
   } as Record<string, string>,
+  hadiahPopup: p('icons/hadiah-popup.png'),
   scene360: p('scene/warung-360.jpg'),
 }

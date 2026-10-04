@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 
 const cache = new Map<string, boolean>()
 
@@ -30,14 +30,16 @@ export default function SmartImg({
   src,
   alt = '',
   className = '',
+  style,
   fallback,
 }: {
   src?: string
   alt?: string
   className?: string
+  style?: CSSProperties
   fallback: ReactNode
 }) {
   const ok = useImageOk(src)
   if (!ok) return <>{fallback}</>
-  return <img src={src} alt={alt} className={className} draggable={false} />
+  return <img src={src} alt={alt} className={className} style={style} draggable={false} />
 }
